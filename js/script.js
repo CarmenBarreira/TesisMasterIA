@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById("send-btn");
     const messageInput = document.getElementById("message-input");
     const chatMessages = document.getElementById("chat-messages");
+    const conversationList = document.getElementById('conversation-list');
 
     let currentConversation = null;
 
@@ -21,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
         chatModal.classList.add("modal-visible");
         chatNameInput.value = "";
         chatNameInput.focus();
+        chatMessages.innerHTML = "";
+
     });
 
     function closeModal() {
@@ -30,8 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function addConversationToSidebar(chatName) {
-        const sidebarList = document.getElementById('conversation-list');
 
+        const sidebarList = document.getElementById('conversation-list');
 
         if (!sidebarList) {
             console.error("No se encontró #conversation-list en el DOM.");
@@ -54,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
     async function createConversation(chatName) {
+        chatMessages.innerHTML = "";
         try {
 
             const response = await fetch(`${API_BASE_URL}/CreateOrGetConversacion/${encodeURIComponent(chatName)}`, {
@@ -72,24 +76,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 const conversacion = JSON.parse(data.conversacion);
 
                 const chatContainer = document.getElementById("chat-messages");
+                chatMessages.innerHTML = "";
 
-                conversacion.forEach(item => {
-                    // Crear el elemento para la pregunta
-                    const preguntaElemento = document.createElement("div");
-                    preguntaElemento.textContent = item.Pregunta;
-                    preguntaElemento.classList.add("mensaje", "pregunta");
 
-                    // Crear el elemento para la respuesta
-                    const respuestaElemento = document.createElement("div");
-                    respuestaElemento.textContent = item.Resultados;
-                    respuestaElemento.classList.add("mensaje", "respuesta");
+                if (conversacion.length === 0) {
+                    // Mostrar un mensaje si la conversación está vacía
 
-                    chatContainer.appendChild(preguntaElemento);
-                    chatContainer.appendChild(respuestaElemento);
-                });
+                    const noMessagesElement = document.createElement("div");
+                    noMessagesElement.textContent = "No hay mensajes en esta conversación.";
+                    noMessagesElement.classList.add("no-messages");
+                    chatContainer.appendChild(noMessagesElement);
+                } else {
+                    conversacion.forEach(item => {
+                        // Crear el elemento para la pregunta
+                        const preguntaElemento = document.createElement("div");
+                        preguntaElemento.textContent = item.Pregunta;
+                        preguntaElemento.classList.add("mensaje", "pregunta");
+
+                        // Crear el elemento para la respuesta
+                        const respuestaElemento = document.createElement("div");
+                        respuestaElemento.textContent = item.Resultados;
+                        respuestaElemento.classList.add("mensaje", "respuesta");
+
+                        chatContainer.appendChild(preguntaElemento);
+                        chatContainer.appendChild(respuestaElemento);
+                    });
+                }
+                addConversationToSidebar(chatName);
             }
-
-            addConversationToSidebar(chatName);
 
         } catch (error) {
             console.error("Error en la conversación:", error);
@@ -147,5 +161,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    conversationList.addEventListener("click", (event) => {
+        const selectedChat = event.target.closest("li");
+        if (!selectedChat) return;
+
+        const chatName = selectedChat.textContent;
+        currentConversation = chatName;
+        chatTitle.textContent = chatName;
+
+        chatMessages.innerHTML = "";
+
+        createConversation(chatName);
+    });
 
 });
