@@ -103,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 }
                 addConversationToSidebar(chatName);
+                chatTitle.textContent = chatName;
             }
 
         } catch (error) {
@@ -153,6 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 closeModal();
             }
         });
+
+        currentConversation = chatName;
+
     });
 
     chatModal.addEventListener("click", (event) => {
@@ -173,5 +177,100 @@ document.addEventListener("DOMContentLoaded", () => {
 
         createConversation(chatName);
     });
+
+
+
+    function showError(message) {
+        const errorDiv = document.getElementById("error-message");
+        const errorText = document.getElementById("error-text");
+        errorText.textContent = message;
+        errorDiv.style.display = "block";
+    }
+
+
+    function appendMessage(msg, side) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", side); // Asegúrate de que tenga las clases correctas
+
+        // Verificamos el tipo de contenido
+        console.log("Mensaje a mostrar:", msg);
+
+        // Si el mensaje es un objeto, extraemos la pregunta y respuesta
+        if (msg.pregunta && msg.respuesta) {
+            messageElement.innerHTML = `
+                <strong>Pregunta:</strong> ${msg.pregunta} <br>
+                <strong>Respuesta:</strong> ${msg.respuesta}
+            `;
+        } else if (typeof msg === 'string') {
+            // Si el mensaje es una cadena de texto
+            messageElement.textContent = msg;
+        } else {
+            // Si el mensaje no es lo que esperábamos, lo mostramos como un objeto
+            messageElement.textContent = JSON.stringify(msg);
+        }
+
+        // Verificamos si el mensaje fue creado correctamente
+        console.log("Elemento de mensaje creado:", messageElement);
+
+        // Agregar el mensaje al contenedor de mensajes
+        chatMessages.appendChild(messageElement);
+    }
+
+    sendBtn.addEventListener("click", async () => {
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            showError("El mensaje no puede estar vacío.");
+            return;
+        }
+
+        // Si no hay una conversación seleccionada, usar la última creada
+        if (!currentConversation) {
+            currentConversation = chatTitle.textContent
+        }
+
+        if (!currentConversation) {
+            showError("No se ha seleccionado ninguna conversación.");
+            return;
+        }
+
+        appendMessage(message, "pregunta");
+        messageInput.value = "";
+
+        try {
+            const requestBody = JSON.stringify({
+                mensaje: message,
+                conversacion: currentConversation
+            });
+
+            console.log("Enviando a la API:", requestBody);
+
+            const response = await fetch(`${API_BASE_URL}/ConversarLlaMa`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: requestBody
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error API: ${response.status} - ${errorText}`);
+            }
+
+            const data = await response.json();
+            console.log("Respuesta de la API:", data);
+
+            if (!data.Pregunta || !data.Resultados) {
+                showError("La respuesta de la API está incompleta.");
+                return;
+            }
+
+            appendMessage(data.Resultados, "respuesta");
+
+        } catch (error) {
+            console.error("Error al enviar mensaje:", error);
+            showError("No se pudo enviar el mensaje. Verifica la conexión e intenta nuevamente.");
+        }
+    });
+
 
 });
