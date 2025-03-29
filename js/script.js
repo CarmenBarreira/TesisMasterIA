@@ -70,40 +70,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await response.json();
 
-            if (data.conversacion) {
+            if (data.mensaje === "Conversación encontrada.") {
+
+                if (data.conversacion) {
+                    document.getElementById('chat-modal').style.display = 'none';
+
+                    const conversacion = JSON.parse(data.conversacion_id);
+
+                    const chatContainer = document.getElementById("chat-messages");
+                    chatMessages.innerHTML = "";
+
+
+                    if (conversacion.length === 0) {
+                        // Mostrar un mensaje si la conversación está vacía
+
+                        const noMessagesElement = document.createElement("div");
+                        noMessagesElement.textContent = "No hay mensajes en esta conversación.";
+                        noMessagesElement.classList.add("no-messages");
+                        chatContainer.appendChild(noMessagesElement);
+                    } else {
+                        conversacion.forEach(item => {
+                            // Crear el elemento para la pregunta
+                            const preguntaElemento = document.createElement("div");
+                            preguntaElemento.textContent = item.Pregunta;
+                            preguntaElemento.classList.add("mensaje", "pregunta");
+
+                            // Crear el elemento para la respuesta
+                            const respuestaElemento = document.createElement("div");
+                            respuestaElemento.textContent = item.Resultados;
+                            respuestaElemento.classList.add("mensaje", "respuesta");
+
+                            chatContainer.appendChild(preguntaElemento);
+                            chatContainer.appendChild(respuestaElemento);
+                        });
+                    }
+                    addConversationToSidebar(chatName);
+                    chatTitle.textContent = chatName;
+                }
+            }
+            else {
                 document.getElementById('chat-modal').style.display = 'none';
 
-                const conversacion = JSON.parse(data.conversacion);
+                const chatName = data.conversacion_id;
 
                 const chatContainer = document.getElementById("chat-messages");
                 chatMessages.innerHTML = "";
-
-
-                if (conversacion.length === 0) {
-                    // Mostrar un mensaje si la conversación está vacía
-
-                    const noMessagesElement = document.createElement("div");
-                    noMessagesElement.textContent = "No hay mensajes en esta conversación.";
-                    noMessagesElement.classList.add("no-messages");
-                    chatContainer.appendChild(noMessagesElement);
-                } else {
-                    conversacion.forEach(item => {
-                        // Crear el elemento para la pregunta
-                        const preguntaElemento = document.createElement("div");
-                        preguntaElemento.textContent = item.Pregunta;
-                        preguntaElemento.classList.add("mensaje", "pregunta");
-
-                        // Crear el elemento para la respuesta
-                        const respuestaElemento = document.createElement("div");
-                        respuestaElemento.textContent = item.Resultados;
-                        respuestaElemento.classList.add("mensaje", "respuesta");
-
-                        chatContainer.appendChild(preguntaElemento);
-                        chatContainer.appendChild(respuestaElemento);
-                    });
-                }
+                const noMessagesElement = document.createElement("div");
+                noMessagesElement.textContent = "No hay mensajes en esta conversación.";
+                noMessagesElement.classList.add("no-messages");
+                chatContainer.appendChild(noMessagesElement);
                 addConversationToSidebar(chatName);
                 chatTitle.textContent = chatName;
+
             }
 
         } catch (error) {
