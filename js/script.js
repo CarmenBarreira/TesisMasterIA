@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.conversacion) {
                     document.getElementById('chat-modal').style.display = 'none';
 
-                    const conversacion = JSON.parse(data.conversacion_id);
+                    const conversacion =data.conversacion;
 
                     const chatContainer = document.getElementById("chat-messages");
                     chatMessages.innerHTML = "";
@@ -251,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
             showError("No se ha seleccionado ninguna conversación.");
             return;
         }
-
+        document.getElementById("chat-messages").innerHTML = "";
         appendMessage(message, "pregunta");
         messageInput.value = "";
 
@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             console.log("Enviando a la API:", requestBody);
 
-            const response = await fetch(`${API_BASE_URL}/ConversarLlaMa`, {
+            const response = await fetch(`${API_BASE_URL}/ConversarMistral`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: requestBody
