@@ -1,6 +1,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app";
+    const API_BASE_URL = "https://vital-strongly-viper.ngrok-free.app";
 
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatModal = document.getElementById("chat-modal");
