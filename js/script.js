@@ -1,6 +1,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    const API_BASE_URL = "https://vital-strongly-viper.ngrok-free.app";
+    const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app";
 
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatModal = document.getElementById("chat-modal");
@@ -236,59 +236,77 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sendBtn.addEventListener("click", async () => {
         const message = messageInput.value.trim();
-
+    
         if (!message) {
             showError("El mensaje no puede estar vacío.");
             return;
         }
-
+    
         // Si no hay una conversación seleccionada, usar la última creada
         if (!currentConversation) {
-            currentConversation = chatTitle.textContent
+            currentConversation = chatTitle.textContent;
         }
-
+    
         if (!currentConversation) {
             showError("No se ha seleccionado ninguna conversación.");
             return;
         }
+    
         document.getElementById("chat-messages").innerHTML = "";
         appendMessage(message, "pregunta");
         messageInput.value = "";
-
+    
         try {
             const requestBody = JSON.stringify({
                 mensaje: message,
                 conversacion: currentConversation
             });
-
-            console.log("Enviando a la API:", requestBody);
-
-            const response = await fetch(`${API_BASE_URL}/ConversarMistral`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: requestBody
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error API: ${response.status} - ${errorText}`);
+    
+            console.log("Enviando a la API Mistral:", requestBody);
+            console.log("Enviando a la API Llama:", requestBody);
+    
+            // Realizamos ambas peticiones en paralelo
+            const [responseMistral, responseLlama] = await Promise.all([
+                fetch(`${API_BASE_URL}/ConversarMistral`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: requestBody
+                }),
+                fetch(`${API_BASE_URL}/ConversarLlaMa`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: requestBody
+                })
+            ]);
+    
+            // Verificamos si ambas respuestas fueron exitosas
+            if (!responseMistral.ok || !responseLlama.ok) {
+                const errorTextMistral = await responseMistral.text();
+                const errorTextLlama = await responseLlama.text();
+                throw new Error(`Error API:\nMistral: ${responseMistral.status} - ${errorTextMistral}\nLlama: ${responseLlama.status} - ${errorTextLlama}`);
             }
-
-            const data = await response.json();
-            console.log("Respuesta de la API:", data);
-
-            if (!data.Pregunta || !data.Resultados) {
+    
+            // Convertimos las respuestas a JSON
+            const dataMistral = await responseMistral.json();
+            const dataLlama = await responseLlama.json();
+    
+            console.log("Respuesta de Mistral:", dataMistral);
+            console.log("Respuesta de Llama:", dataLlama);
+    
+            if (!dataMistral.Pregunta || !dataMistral.Resultados || !dataLlama.Pregunta || !dataLlama.Resultados) {
                 showError("La respuesta de la API está incompleta.");
                 return;
             }
-
-            appendMessage(data.Resultados, "respuesta");
-
+    
+            // Mostramos las respuestas en el chat
+            appendMessage(`<b>Respuesta Mistral</b>: ${dataMistral.Resultados}`, "respuesta");
+            appendMessage(`Respuesta Llama: ${dataLlama.Resultados}`, "respuesta");
+    
         } catch (error) {
             console.error("Error al enviar mensaje:", error);
             showError("No se pudo enviar el mensaje. Verifica la conexión e intenta nuevamente.");
         }
     });
-
+    
 
 });
