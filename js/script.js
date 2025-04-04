@@ -1,7 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app";
-
+    //const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app";
+    const API_BASE_URL = "https://vital-strongly-viper.ngrok-free.app";
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatModal = document.getElementById("chat-modal");
     const startChatBtn = document.getElementById("start-chat-btn");
@@ -16,6 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentConversation = null;
 
     chatModal.style.display = 'none';
+
+    // Aseguramos que el loader esté oculto al cargar la página
+    const loader = document.getElementById("loading-overlay");
+    loader.style.opacity = "0";
+    loader.style.visibility = "hidden";
 
     newChatBtn.addEventListener("click", () => {
         chatModal.classList.remove("hidden");
@@ -75,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.conversacion) {
                     document.getElementById('chat-modal').style.display = 'none';
 
-                    const conversacion =data.conversacion;
+                    const conversacion = data.conversacion;
 
                     const chatContainer = document.getElementById("chat-messages");
                     chatMessages.innerHTML = "";
@@ -234,15 +239,25 @@ document.addEventListener("DOMContentLoaded", () => {
         chatMessages.appendChild(messageElement);
     }
 
+    function showLoader() {
+        const loader = document.getElementById("loading-overlay");
+        loader.style.opacity = "1";
+        loader.style.visibility = "visible";
+    }
+    
+    function hideLoader() {
+        const loader = document.getElementById("loading-overlay");
+        loader.style.opacity = "0";
+        loader.style.visibility = "hidden";
+    }
+    
     sendBtn.addEventListener("click", async () => {
         const message = messageInput.value.trim();
-    
         if (!message) {
             showError("El mensaje no puede estar vacío.");
             return;
         }
     
-        // Si no hay una conversación seleccionada, usar la última creada
         if (!currentConversation) {
             currentConversation = chatTitle.textContent;
         }
@@ -251,6 +266,8 @@ document.addEventListener("DOMContentLoaded", () => {
             showError("No se ha seleccionado ninguna conversación.");
             return;
         }
+    
+        showLoader();
     
         document.getElementById("chat-messages").innerHTML = "";
         appendMessage(message, "pregunta");
@@ -262,10 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 conversacion: currentConversation
             });
     
-            console.log("Enviando a la API Mistral:", requestBody);
-            console.log("Enviando a la API Llama:", requestBody);
-    
-            // Realizamos ambas peticiones en paralelo
             const [responseMistral, responseLlama] = await Promise.all([
                 fetch(`${API_BASE_URL}/ConversarMistral`, {
                     method: "POST",
@@ -279,34 +292,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
             ]);
     
-            // Verificamos si ambas respuestas fueron exitosas
             if (!responseMistral.ok || !responseLlama.ok) {
-                const errorTextMistral = await responseMistral.text();
-                const errorTextLlama = await responseLlama.text();
-                throw new Error(`Error API:\nMistral: ${responseMistral.status} - ${errorTextMistral}\nLlama: ${responseLlama.status} - ${errorTextLlama}`);
+                throw new Error("Error en una o ambas API");
             }
     
-            // Convertimos las respuestas a JSON
             const dataMistral = await responseMistral.json();
             const dataLlama = await responseLlama.json();
     
-            console.log("Respuesta de Mistral:", dataMistral);
-            console.log("Respuesta de Llama:", dataLlama);
-    
-            if (!dataMistral.Pregunta || !dataMistral.Resultados || !dataLlama.Pregunta || !dataLlama.Resultados) {
-                showError("La respuesta de la API está incompleta.");
-                return;
-            }
-    
-            // Mostramos las respuestas en el chat
             appendMessage(`<b>Respuesta Mistral</b>: ${dataMistral.Resultados}`, "respuesta");
             appendMessage(`Respuesta Llama: ${dataLlama.Resultados}`, "respuesta");
     
         } catch (error) {
-            console.error("Error al enviar mensaje:", error);
-            showError("No se pudo enviar el mensaje. Verifica la conexión e intenta nuevamente.");
+            showError("No se pudo enviar el mensaje.");
+            console.error(error);
+        } finally {
+            hideLoader();
         }
     });
-    
 
 });
