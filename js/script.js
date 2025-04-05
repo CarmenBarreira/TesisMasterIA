@@ -1,7 +1,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    //const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app";
-    const API_BASE_URL = "https://vital-strongly-viper.ngrok-free.app";
+    //const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app"; //DESA 
+    const API_BASE_URL = "https://vital-strongly-viper.ngrok-free.app"; //PROD
+
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatModal = document.getElementById("chat-modal");
     const startChatBtn = document.getElementById("start-chat-btn");
@@ -279,28 +280,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 conversacion: currentConversation
             });
     
-            const [responseMistral, responseLlama] = await Promise.all([
+            const [responseMistral/*, responseLlama*/] = await Promise.all([
                 fetch(`${API_BASE_URL}/ConversarMistral`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: requestBody
-                }),
+                })
+                /*,
                 fetch(`${API_BASE_URL}/ConversarLlaMa`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: requestBody
-                })
+                })*/
             ]);
     
-            if (!responseMistral.ok || !responseLlama.ok) {
+            if (!responseMistral.ok ){//|| !responseLlama.ok) {
                 throw new Error("Error en una o ambas API");
             }
     
             const dataMistral = await responseMistral.json();
-            const dataLlama = await responseLlama.json();
+            //const dataLlama = await responseLlama.json();
     
             appendMessage(`<b>Respuesta Mistral</b>: ${dataMistral.Resultados}`, "respuesta");
-            appendMessage(`Respuesta Llama: ${dataLlama.Resultados}`, "respuesta");
+           // appendMessage(`Respuesta Llama: ${dataLlama.Resultados}`, "respuesta");
     
         } catch (error) {
             showError("No se pudo enviar el mensaje.");
