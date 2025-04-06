@@ -88,7 +88,7 @@ footer {
   border-radius: 5px;
 }
 
-#send-btn {
+#send-btn-mistral, #send-btn-llama {
   background-color: #00558e;
   color: white;
   border: none;
@@ -98,7 +98,11 @@ footer {
   border-radius: 5px;
 }
 
-#send-btn:hover {
+#send-btn-mistral:hover {
+  background-color: #003f6b;
+}
+
+#send-btn-llama:hover {
   background-color: #003f6b;
 }
 

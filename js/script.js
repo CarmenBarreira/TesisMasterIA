@@ -1,7 +1,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    //const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app"; //DESA 
+    //const API_BASE_URL = "https://eel-notable-goshawk.ngrok-free.app"; //DESA nico
     const API_BASE_URL = "https://vital-strongly-viper.ngrok-free.app"; //PROD
+    //const API_BASE_URL = "https://firm-lively-sheepdog.ngrok-free.app"; //carmen 
 
     const newChatBtn = document.getElementById("new-chat-btn");
     const chatModal = document.getElementById("chat-modal");
@@ -9,7 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatNameInput = document.getElementById("chat-name-input");
     const chatTitle = document.getElementById("chat-title");
     const chatList = document.getElementById("chat-list");
-    const sendBtn = document.getElementById("send-btn");
+    const sendBtnMistral = document.getElementById("send-btn-mistral");
+    const sendBtnLlama = document.getElementById("send-btn-llama");
     const messageInput = document.getElementById("message-input");
     const chatMessages = document.getElementById("chat-messages");
     const conversationList = document.getElementById('conversation-list');
@@ -245,70 +247,143 @@ document.addEventListener("DOMContentLoaded", () => {
         loader.style.opacity = "1";
         loader.style.visibility = "visible";
     }
-    
+
     function hideLoader() {
         const loader = document.getElementById("loading-overlay");
         loader.style.opacity = "0";
         loader.style.visibility = "hidden";
     }
-    
-    sendBtn.addEventListener("click", async () => {
+
+    sendBtnMistral.addEventListener("click", async () => {
         const message = messageInput.value.trim();
         if (!message) {
             showError("El mensaje no puede estar vacío.");
             return;
         }
-    
+        currentConversation = chatTitle.textContent;
+
         if (!currentConversation) {
             currentConversation = chatTitle.textContent;
-        }
-    
-        if (!currentConversation) {
             showError("No se ha seleccionado ninguna conversación.");
             return;
         }
-    
+
         showLoader();
-    
+
         document.getElementById("chat-messages").innerHTML = "";
         appendMessage(message, "pregunta");
         messageInput.value = "";
-    
+
         try {
             const requestBody = JSON.stringify({
                 mensaje: message,
                 conversacion: currentConversation
             });
-    
-            const [responseMistral/*, responseLlama*/] = await Promise.all([
+
+            const [responseMistral] = await Promise.all([
                 fetch(`${API_BASE_URL}/ConversarMistral`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: requestBody
                 })
-                /*,
-                fetch(`${API_BASE_URL}/ConversarLlaMa`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: requestBody
-                })*/
             ]);
-    
-            if (!responseMistral.ok ){//|| !responseLlama.ok) {
+
+            if (!responseMistral.ok) {//|| !responseLlama.ok) {
                 throw new Error("Error en una o ambas API");
             }
-    
+
             const dataMistral = await responseMistral.json();
-            //const dataLlama = await responseLlama.json();
-    
-            appendMessage(`<b>Respuesta Mistral</b>: ${dataMistral.Resultados}`, "respuesta");
-           // appendMessage(`Respuesta Llama: ${dataLlama.Resultados}`, "respuesta");
-    
+
+            appendMessage(`${dataMistral.Resultados}`, "respuesta");
+
         } catch (error) {
             showError("No se pudo enviar el mensaje.");
             console.error(error);
         } finally {
             hideLoader();
+        }
+
+        try {
+            const [resumen] = await Promise.all([
+                fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                })
+            ]);
+
+            if (!resumen.ok) {
+                throw new Error("Error al guardar resumen");
+            }
+        } catch (error) {
+            showError("No se pudo guardar resumen .");
+            console.error(error);
+        }
+    });
+
+    sendBtnLlama.addEventListener("click", async () => {
+        const message = messageInput.value.trim();
+        currentConversation = chatTitle.textContent;
+
+        if (!message) {
+            showError("El mensaje no puede estar vacío.");
+            return;
+        }
+
+        if (!currentConversation) {
+            currentConversation = chatTitle.textContent;
+            showError("No se ha seleccionado ninguna conversación.");
+            return;
+        }
+
+        showLoader();
+
+        document.getElementById("chat-messages").innerHTML = "";
+        appendMessage(message, "pregunta");
+        messageInput.value = "";
+
+        try {
+            const requestBody = JSON.stringify({
+                mensaje: message,
+                conversacion: currentConversation
+            });
+
+            const [responseLlama] = await Promise.all([
+                fetch(`${API_BASE_URL}/ConversarLlaMa`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: requestBody
+                })
+            ]);
+
+            if (!responseLlama.ok) {
+                throw new Error("Error en API");
+            }
+
+            const dataLlama = await responseLlama.json();
+
+            appendMessage(`${dataLlama.Resultados}`, "respuesta");
+
+        } catch (error) {
+            showError("No se pudo enviar el mensaje.");
+            console.error(error);
+        } finally {
+            hideLoader();
+        }
+
+        try {
+            const [resumen] = await Promise.all([
+                fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                })
+            ]);
+
+            if (!resumen.ok) {
+                throw new Error("Error al guardar resumen");
+            }
+        } catch (error) {
+            showError("No se pudo guardar resumen .");
+            console.error(error);
         }
     });
 
