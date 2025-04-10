@@ -92,10 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (conversacion.length === 0) {
                         // Mostrar un mensaje si la conversación está vacía
 
-                        const noMessagesElement = document.createElement("div");
-                        noMessagesElement.textContent = "No hay mensajes en esta conversación.";
-                        noMessagesElement.classList.add("no-messages");
-                        chatContainer.appendChild(noMessagesElement);
+                        //const noMessagesElement = document.createElement("div");
+                        showError("No hay mensajes en esta conversación.", "warning");
+                        //noMessagesElement.classList.add("no-messages");
+                        //chatContainer.appendChild(noMessagesElement);
                     } else {
                         conversacion.forEach(item => {
                             // Crear el elemento para la pregunta
@@ -120,26 +120,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('chat-modal').style.display = 'none';
 
                 const chatName = data.conversacion_id;
+                showError("No hay mensajes en esta conversación.", "warning");
 
-                const chatContainer = document.getElementById("chat-messages");
-                chatMessages.innerHTML = "";
-                const noMessagesElement = document.createElement("div");
-                noMessagesElement.textContent = "No hay mensajes en esta conversación.";
-                noMessagesElement.classList.add("no-messages");
-                chatContainer.appendChild(noMessagesElement);
                 addConversationToSidebar(chatName);
                 chatTitle.textContent = chatName;
-
             }
 
         } catch (error) {
-            console.error("Error en la conversación:", error);
+            console.log("Error en la conversación:");
         }
 
         closeModal();
     }
 
     startChatBtn.addEventListener("click", async () => {
+        clearError();
         const chatName = chatNameInput.value.trim();
         if (!chatName) return;
 
@@ -152,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Verificamos que el contenedor de mensajes exista
         const chatMessages = document.getElementById("chat-messages");
         if (!chatMessages) {
-            console.error("Elemento con id 'chat-messages' no encontrado en el DOM");
+            console.log("Elemento con id 'chat-messages' no encontrado en el DOM");
             return;
         }
 
@@ -203,11 +198,58 @@ document.addEventListener("DOMContentLoaded", () => {
         createConversation(chatName);
     });
 
-    function showError(message) {
+    function showError(message, type = "error", autoClear = false) {
         const errorDiv = document.getElementById("error-message");
         const errorText = document.getElementById("error-text");
+        const errorType = document.getElementById("error-type");
+    
+        // Establecer el mensaje de error
         errorText.textContent = message;
-        errorDiv.style.display = "block";
+    
+        // Cambiar el tipo de mensaje y el estilo según el tipo
+        if (type === "warning") {
+            // Estilo para el warning
+            errorDiv.style.backgroundColor = "rgb(255, 255, 179)"; // amarillo mostaza para warning
+            errorDiv.style.border = "1px solid rgb(255, 223, 102)"; // borde amarillo mostaza
+            errorText.style.color = "black"; // color negro para el texto
+            errorType.textContent = "Advertencia:"; // Cambiar el texto a 'Advertencia' para warning
+        } else {
+            // Estilo para el error
+            errorDiv.style.backgroundColor = "rgb(248, 215, 218)"; // fondo rosa para error
+            errorDiv.style.border = "1px solid rgb(245, 198, 203)"; // borde rosa claro
+            errorText.style.color = "rgb(114, 28, 36)"; // color rojo oscuro para el texto
+            errorType.textContent = "Error:"; // Cambiar el texto a 'Error' para error
+        }
+    
+        // Asegurarse de que el mensaje sea visible
+        errorDiv.style.display = "block"; // Hacer visible el div de error
+    
+/*        if (autoClear) {
+            setTimeout(() => {
+                clearError();
+            }, 5000);
+        }*/
+    }
+    
+    function clearError() {
+        const errorDiv = document.getElementById("error-message");
+        errorDiv.style.display = "none"; // Ocultar el div de error
+    }
+    
+    function clearError() {
+        const errorDiv = document.getElementById("error-message");
+        errorDiv.style.display = "none"; // Ocultar el div de error
+    }
+
+
+
+    function clearError() {
+        const errorDiv = document.getElementById("error-message");
+        const errorText = document.getElementById("error-text");
+
+        errorText.textContent = "";
+        errorDiv.style.display = "none";
+
     }
 
 
@@ -250,22 +292,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     sendBtnMistral.addEventListener("click", async () => {
+        clearError();
         const message = messageInput.value.trim();
         if (!message) {
-            showError("El mensaje no puede estar vacío.");
+            showError("El mensaje no puede estar vacío.", "error");
             return;
         }
         currentConversation = chatTitle.textContent;
 
         if (!currentConversation) {
             currentConversation = chatTitle.textContent;
-            showError("No se ha seleccionado ninguna conversación.");
+            showError("No se ha seleccionado ninguna conversación.", "error");
             return;
         }
 
         showLoader();
 
-        appendMessage( message, "pregunta");
+        appendMessage(message, "pregunta");
         messageInput.value = "";
 
         try {
@@ -291,8 +334,8 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage(`${dataMistral.Resultados}`, "respuesta");
 
         } catch (error) {
-            showError("No se pudo enviar el mensaje.");
-            console.error(error);
+            showError("No se pudo enviar el mensaje.", "error");
+            console.log(error);
         } finally {
             hideLoader();
         }
@@ -309,22 +352,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("Error al guardar resumen");
             }
         } catch (error) {
-            showError("No se pudo guardar resumen .");
-            console.error(error);
+            showError("No se pudo guardar resumen .", "error");
+            console.log(error);
         }
     });
 
     sendBtnLlama.addEventListener("click", async () => {
+        clearError();
         const message = messageInput.value.trim();
         currentConversation = chatTitle.textContent;
 
         if (!message) {
-            showError("El mensaje no puede estar vacío.");
+            showError("El mensaje no puede estar vacío.", "warning");
             return;
         }
 
         if (!currentConversation) {
-            showError("No se ha seleccionado ninguna conversación.");
+            showError("No se ha seleccionado ninguna conversación.", "warning");
             return;
         }
 
@@ -356,8 +400,8 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage(`${dataLlama.Resultados}`, "respuesta");
 
         } catch (error) {
-            showError("No se pudo enviar el mensaje.");
-            console.error(error);
+            showError("No se pudo enviar el mensaje.", "error");
+            console.log(error);
         } finally {
             hideLoader();
         }
@@ -374,8 +418,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("Error al guardar resumen");
             }
         } catch (error) {
-            showError("No se pudo guardar resumen .");
-            console.error(error);
+            showError("No se pudo guardar resumen .", "error");
+            console.log(error);
         }
     });
 
