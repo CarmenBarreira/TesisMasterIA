@@ -206,7 +206,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Establecer el mensaje de error
         errorText.textContent = message;
     
-        // Cambiar el tipo de mensaje y el estilo según el tipo
         if (type === "warning") {
             // Estilo para el warning
             errorDiv.style.backgroundColor = "rgb(255, 255, 179)"; // amarillo mostaza para warning
@@ -325,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
             ]);
 
-            if (!responseMistral.ok) {//|| !responseLlama.ok) {
+            if (!responseMistral.ok) {
                 throw new Error("Error en una o ambas API");
             }
 
@@ -333,28 +332,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
             appendMessage(`${dataMistral.Resultados}`, "respuesta");
 
+            try {
+                const [resumen] = await Promise.all([
+                    fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                    })
+                ]);
+    
+                if (!resumen.ok) {
+                    throw new Error("Error al guardar resumen");
+                }
+            } catch (error) {
+                showError("No se pudo guardar resumen, comuniquese con el administrador del sistema.", "error");
+                console.log(error);
+            }
+
         } catch (error) {
-            showError("No se pudo enviar el mensaje.", "error");
+            showError("Hubo error en la comunicacion con el servidor, comuniquese con el administrador del sistema. ", "error");
             console.log(error);
         } finally {
             hideLoader();
         }
 
-        try {
-            const [resumen] = await Promise.all([
-                fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                })
-            ]);
-
-            if (!resumen.ok) {
-                throw new Error("Error al guardar resumen");
-            }
-        } catch (error) {
-            showError("No se pudo guardar resumen .", "error");
-            console.log(error);
-        }
+        
     });
 
     sendBtnLlama.addEventListener("click", async () => {
@@ -399,28 +400,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
             appendMessage(`${dataLlama.Resultados}`, "respuesta");
 
+            try {
+                const [resumen] = await Promise.all([
+                    fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                    })
+                ]);
+    
+                if (!resumen.ok) {
+                    throw new Error("Error al guardar resumen");
+                }
+            } catch (error) {
+                showError("No se pudo guardar resumen, comuniquese con el administrador del sistema.", "error");
+                console.log(error);
+            }
+
         } catch (error) {
-            showError("No se pudo enviar el mensaje.", "error");
+            showError("Hubo error en la comunicacion con el servidor, comuniquese con el administrador del sistema. ", "error");
             console.log(error);
         } finally {
             hideLoader();
         }
 
-        try {
-            const [resumen] = await Promise.all([
-                fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                })
-            ]);
-
-            if (!resumen.ok) {
-                throw new Error("Error al guardar resumen");
-            }
-        } catch (error) {
-            showError("No se pudo guardar resumen .", "error");
-            console.log(error);
-        }
+        
     });
 
 });
