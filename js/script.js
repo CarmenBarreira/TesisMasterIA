@@ -215,18 +215,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function appendMessage(msg, side) {
-        const messageElement = document.createElement("div");
-        messageElement.classList.add("message", side); // Asegúrate de que tenga las clases correctas
 
-        // Verificamos el tipo de contenido
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", side);
+
         console.log("Mensaje a mostrar:", msg);
 
         // Si el mensaje es un objeto, extraemos la pregunta y respuesta
         if (msg.pregunta && msg.respuesta) {
+            const respuestaConSaltos = msg.respuesta.replace(/\n/g, "<br>");
             messageElement.innerHTML = `
-                <strong>Pregunta:</strong> ${msg.pregunta} <br>
-                <strong>Respuesta:</strong> ${msg.respuesta}
-            `;
+            <strong>Pregunta:</strong> ${msg.pregunta} <br>
+            <strong>Respuesta:</strong> ${respuestaConSaltos}
+        `;
+
         } else if (typeof msg === 'string') {
             // Si el mensaje es una cadena de texto
             messageElement.textContent = msg;
@@ -235,7 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
             messageElement.textContent = JSON.stringify(msg);
         }
 
-        // Verificamos si el mensaje fue creado correctamente
         console.log("Elemento de mensaje creado:", messageElement);
 
         // Agregar el mensaje al contenedor de mensajes
