@@ -180,7 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 closeModal();
             }
         });
-
         currentConversation = chatName;
 
     });
@@ -203,8 +202,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         createConversation(chatName);
     });
-
-
 
     function showError(message) {
         const errorDiv = document.getElementById("error-message");
@@ -230,16 +227,13 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         } else if (typeof msg === 'string') {
-            // Si el mensaje es una cadena de texto
             messageElement.textContent = msg;
         } else {
-            // Si el mensaje no es lo que esperábamos, lo mostramos como un objeto
             messageElement.textContent = JSON.stringify(msg);
         }
 
         console.log("Elemento de mensaje creado:", messageElement);
 
-        // Agregar el mensaje al contenedor de mensajes
         chatMessages.appendChild(messageElement);
     }
 
@@ -271,8 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showLoader();
 
-        document.getElementById("chat-messages").innerHTML = "";
-        appendMessage(message, "pregunta");
+        appendMessage( message, "pregunta");
         messageInput.value = "";
 
         try {
@@ -331,14 +324,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!currentConversation) {
-            currentConversation = chatTitle.textContent;
             showError("No se ha seleccionado ninguna conversación.");
             return;
         }
 
         showLoader();
 
-        document.getElementById("chat-messages").innerHTML = "";
         appendMessage(message, "pregunta");
         messageInput.value = "";
 
