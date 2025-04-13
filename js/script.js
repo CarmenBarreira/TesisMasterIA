@@ -20,18 +20,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     chatModal.style.display = 'none';
 
-    // Aseguramos que el loader esté oculto al cargar la página
     const loader = document.getElementById("loading-overlay");
     loader.style.opacity = "0";
     loader.style.visibility = "hidden";
 
     newChatBtn.addEventListener("click", () => {
-        chatModal.classList.remove("hidden");
-        chatModal.classList.add("modal-visible");
-        chatNameInput.value = "";
-        chatNameInput.focus();
-        chatMessages.innerHTML = "";
 
+        fetch(API_BASE_URL, { method: 'GET' })
+            .then(response => {
+                chatModal.classList.remove("hidden");
+                chatModal.classList.add("modal-visible");
+                chatNameInput.value = "";
+                chatNameInput.focus();
+                chatMessages.innerHTML = "";
+            })
+            .catch(error => {
+                showError("No se pudo conectar con la API. Contactese con el administrador del sistema", "error");
+            });
     });
 
     function closeModal() {
@@ -90,12 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                     if (conversacion.length === 0) {
-                        // Mostrar un mensaje si la conversación está vacía
-
-                        //const noMessagesElement = document.createElement("div");
                         showError("No hay mensajes en esta conversación.", "warning");
-                        //noMessagesElement.classList.add("no-messages");
-                        //chatContainer.appendChild(noMessagesElement);
+
                     } else {
                         conversacion.forEach(item => {
                             // Crear el elemento para la pregunta
@@ -202,45 +203,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const errorDiv = document.getElementById("error-message");
         const errorText = document.getElementById("error-text");
         const errorType = document.getElementById("error-type");
-    
-        // Establecer el mensaje de error
+
         errorText.textContent = message;
-    
+
         if (type === "warning") {
             // Estilo para el warning
             errorDiv.style.backgroundColor = "rgb(255, 255, 179)"; // amarillo mostaza para warning
             errorDiv.style.border = "1px solid rgb(255, 223, 102)"; // borde amarillo mostaza
-            errorText.style.color = "black"; // color negro para el texto
-            errorType.textContent = "Advertencia:"; // Cambiar el texto a 'Advertencia' para warning
+            errorText.style.color = "black";
+            errorType.textContent = "Advertencia:";
         } else {
             // Estilo para el error
             errorDiv.style.backgroundColor = "rgb(248, 215, 218)"; // fondo rosa para error
             errorDiv.style.border = "1px solid rgb(245, 198, 203)"; // borde rosa claro
-            errorText.style.color = "rgb(114, 28, 36)"; // color rojo oscuro para el texto
-            errorType.textContent = "Error:"; // Cambiar el texto a 'Error' para error
+            errorText.style.color = "rgb(114, 28, 36)"; // rojo oscuro para el texto
+            errorType.textContent = "Error:";
         }
-    
-        // Asegurarse de que el mensaje sea visible
+
         errorDiv.style.display = "block"; // Hacer visible el div de error
-    
-/*        if (autoClear) {
-            setTimeout(() => {
-                clearError();
-            }, 5000);
-        }*/
-    }
-    
-    function clearError() {
-        const errorDiv = document.getElementById("error-message");
-        errorDiv.style.display = "none"; // Ocultar el div de error
-    }
-    
-    function clearError() {
-        const errorDiv = document.getElementById("error-message");
-        errorDiv.style.display = "none"; // Ocultar el div de error
-    }
 
-
+    }
 
     function clearError() {
         const errorDiv = document.getElementById("error-message");
@@ -250,7 +232,6 @@ document.addEventListener("DOMContentLoaded", () => {
         errorDiv.style.display = "none";
 
     }
-
 
     function appendMessage(msg, side) {
 
@@ -292,21 +273,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     sendBtnMistral.addEventListener("click", async () => {
         clearError();
+
         const message = messageInput.value.trim();
-        if (!message) {
-            showError("El mensaje no puede estar vacío.", "error");
-            return;
-        }
         currentConversation = chatTitle.textContent;
 
+        // Validaciones antes de llamar a la API
+        if (!message) {
+            showError("El mensaje no puede estar vacío.", "warning");
+            return;
+        }
+
         if (!currentConversation) {
-            currentConversation = chatTitle.textContent;
             showError("No se ha seleccionado ninguna conversación.", "error");
             return;
         }
 
-        showLoader();
+        // Verificar si la API está levantada
+        try {
+            const responseApi = await fetch(API_BASE_URL, { method: 'GET' });
+            if (!responseApi.ok) {
+                showError("La API no respondió correctamente. Contacte al administrador.", "error");
+                return;
+            }
+        } catch (error) {
+            showError("No se pudo conectar con la API. Contacte al administrador del sistema.", "error");
+            return;
+        }
 
+        // Comienza la interacción con el chat
+        showLoader();
         appendMessage(message, "pregunta");
         messageInput.value = "";
 
@@ -316,50 +311,46 @@ document.addEventListener("DOMContentLoaded", () => {
                 conversacion: currentConversation
             });
 
-            const [responseMistral] = await Promise.all([
-                fetch(`${API_BASE_URL}/ConversarMistral`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: requestBody
-                })
-            ]);
+            const responseMistral = await fetch(`${API_BASE_URL}/ConversarMistral`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: requestBody
+            });
 
             if (!responseMistral.ok) {
-                throw new Error("Error en una o ambas API");
+                throw new Error("Error en ConversarMistral");
             }
 
             const dataMistral = await responseMistral.json();
-
             appendMessage(`${dataMistral.Resultados}`, "respuesta");
 
+            // Resumen de la conversación
             try {
-                const [resumen] = await Promise.all([
-                    fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                    })
-                ]);
-    
+                const resumen = await fetch(`${API_BASE_URL}/ResumirConversacion?id=${currentConversation}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                });
+
                 if (!resumen.ok) {
                     throw new Error("Error al guardar resumen");
                 }
             } catch (error) {
-                showError("No se pudo guardar resumen, comuniquese con el administrador del sistema.", "error");
-                console.log(error);
+                showError("No se pudo guardar resumen. Contacte al administrador.", "error");
+                console.error(error);
             }
 
         } catch (error) {
-            showError("Hubo error en la comunicacion con el servidor, comuniquese con el administrador del sistema. ", "error");
-            console.log(error);
+            showError("Hubo un error en la comunicación con el servidor. Contacte al administrador.", "error");
+            console.error(error);
         } finally {
             hideLoader();
         }
-
-        
     });
+
 
     sendBtnLlama.addEventListener("click", async () => {
         clearError();
+
         const message = messageInput.value.trim();
         currentConversation = chatTitle.textContent;
 
@@ -373,6 +364,18 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // Verificar si la API está levantada
+        try {
+            const responseApi = await fetch(API_BASE_URL, { method: 'GET' });
+            if (!responseApi.ok) {
+                showError("La API no respondió correctamente. Contacte al administrador.", "error");
+                return;
+            }
+        } catch (error) {
+            showError("No se pudo conectar con la API. Contacte al administrador del sistema.", "error");
+            return;
+        }
+
         showLoader();
 
         appendMessage(message, "pregunta");
@@ -384,46 +387,116 @@ document.addEventListener("DOMContentLoaded", () => {
                 conversacion: currentConversation
             });
 
-            const [responseLlama] = await Promise.all([
-                fetch(`${API_BASE_URL}/ConversarLlaMa`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: requestBody
-                })
-            ]);
+            const responseLlama = await fetch(`${API_BASE_URL}/ConversarLlaMa`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: requestBody
+            });
 
             if (!responseLlama.ok) {
-                throw new Error("Error en API");
+                throw new Error("Error en ConversarLlaMa");
             }
 
             const dataLlama = await responseLlama.json();
-
             appendMessage(`${dataLlama.Resultados}`, "respuesta");
 
+            // Intentar guardar resumen
             try {
-                const [resumen] = await Promise.all([
-                    fetch(`${API_BASE_URL}/ResumirConversacion?id=` + currentConversation, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                    })
-                ]);
-    
+                const resumen = await fetch(`${API_BASE_URL}/ResumirConversacion?id=${currentConversation}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                });
+
                 if (!resumen.ok) {
                     throw new Error("Error al guardar resumen");
                 }
             } catch (error) {
-                showError("No se pudo guardar resumen, comuniquese con el administrador del sistema.", "error");
-                console.log(error);
+                showError("No se pudo guardar resumen. Contacte al administrador del sistema.", "error");
+                console.error(error);
             }
 
         } catch (error) {
-            showError("Hubo error en la comunicacion con el servidor, comuniquese con el administrador del sistema. ", "error");
-            console.log(error);
+            showError("Hubo un error en la comunicación con el servidor. Contacte al administrador del sistema.", "error");
+            console.error(error);
         } finally {
             hideLoader();
         }
-
-        
     });
+
+    sendBtnLlama.addEventListener("click", async () => {
+    clearError();
+
+    const message = messageInput.value.trim();
+    currentConversation = chatTitle.textContent;
+
+    if (!message) {
+        showError("El mensaje no puede estar vacío.", "warning");
+        return;
+    }
+
+    if (!currentConversation) {
+        showError("No se ha seleccionado ninguna conversación.", "warning");
+        return;
+    }
+
+    // Verificar si la API está levantada
+    try {
+        const responseApi = await fetch(API_BASE_URL, { method: 'GET' });
+        if (!responseApi.ok) {
+            showError("La API no respondió correctamente. Contacte al administrador.", "error");
+            return;
+        }
+    } catch (error) {
+        showError("No se pudo conectar con la API. Contacte al administrador del sistema.", "error");
+        return;
+    }
+
+    showLoader();
+
+    appendMessage(message, "pregunta");
+    messageInput.value = "";
+
+    try {
+        const requestBody = JSON.stringify({
+            mensaje: message,
+            conversacion: currentConversation
+        });
+
+        const responseLlama = await fetch(`${API_BASE_URL}/ConversarLlaMa`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: requestBody
+        });
+
+        if (!responseLlama.ok) {
+            throw new Error("Error en ConversarLlaMa");
+        }
+
+        const dataLlama = await responseLlama.json();
+        appendMessage(`${dataLlama.Resultados}`, "respuesta");
+
+        // Intentar guardar resumen
+        try {
+            const resumen = await fetch(`${API_BASE_URL}/ResumirConversacion?id=${currentConversation}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (!resumen.ok) {
+                throw new Error("Error al guardar resumen");
+            }
+        } catch (error) {
+            showError("No se pudo guardar resumen. Contacte al administrador del sistema.", "error");
+            console.error(error);
+        }
+
+    } catch (error) {
+        showError("Hubo un error en la comunicación con el servidor. Contacte al administrador del sistema.", "error");
+        console.error(error);
+    } finally {
+        hideLoader();
+    }
+});
+
 
 });
