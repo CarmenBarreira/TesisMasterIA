@@ -288,18 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Verificar si la API está levantada
-        try {
-            const responseApi = await fetch(API_BASE_URL, { method: 'GET' });
-            if (!responseApi.ok) {
-                showError("La API no respondió correctamente. Contacte al administrador.", "error");
-                return;
-            }
-        } catch (error) {
-            showError("No se pudo conectar con la API. Contacte al administrador del sistema.", "error");
-            return;
-        }
-
         // Comienza la interacción con el chat
         showLoader();
         appendMessage(message, "pregunta");
@@ -318,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!responseMistral.ok) {
-                throw new Error("Error en ConversarMistral");
+                throw new Error("Error en ConversarMistral. Error: " + responseMistral.status);
             }
 
             const dataMistral = await responseMistral.json();
@@ -332,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 if (!resumen.ok) {
-                    throw new Error("Error al guardar resumen");
+                    throw new Error("Error al guardar resumen.  Error: " + resumen.status);
                 }
             } catch (error) {
                 showError("No se pudo guardar resumen. Contacte al administrador.", "error");
@@ -364,18 +352,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Verificar si la API está levantada
-        try {
-            const responseApi = await fetch(API_BASE_URL, { method: 'GET' });
-            if (!responseApi.ok) {
-                showError("La API no respondió correctamente. Contacte al administrador.", "error");
-                return;
-            }
-        } catch (error) {
-            showError("No se pudo conectar con la API. Contacte al administrador del sistema.", "error");
-            return;
-        }
-
         showLoader();
 
         appendMessage(message, "pregunta");
@@ -394,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!responseLlama.ok) {
-                throw new Error("Error en ConversarLlaMa");
+                throw new Error("Error en ConversarLlaMa. Error: " + responseLlama.status);
             }
 
             const dataLlama = await responseLlama.json();
@@ -408,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 if (!resumen.ok) {
-                    throw new Error("Error al guardar resumen");
+                    throw new Error("Error al guardar resumen. Error: " + resumen.status);
                 }
             } catch (error) {
                 showError("No se pudo guardar resumen. Contacte al administrador del sistema.", "error");
@@ -422,81 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
             hideLoader();
         }
     });
-
-    sendBtnLlama.addEventListener("click", async () => {
-    clearError();
-
-    const message = messageInput.value.trim();
-    currentConversation = chatTitle.textContent;
-
-    if (!message) {
-        showError("El mensaje no puede estar vacío.", "warning");
-        return;
-    }
-
-    if (!currentConversation) {
-        showError("No se ha seleccionado ninguna conversación.", "warning");
-        return;
-    }
-
-    // Verificar si la API está levantada
-    try {
-        const responseApi = await fetch(API_BASE_URL, { method: 'GET' });
-        if (!responseApi.ok) {
-            showError("La API no respondió correctamente. Contacte al administrador.", "error");
-            return;
-        }
-    } catch (error) {
-        showError("No se pudo conectar con la API. Contacte al administrador del sistema.", "error");
-        return;
-    }
-
-    showLoader();
-
-    appendMessage(message, "pregunta");
-    messageInput.value = "";
-
-    try {
-        const requestBody = JSON.stringify({
-            mensaje: message,
-            conversacion: currentConversation
-        });
-
-        const responseLlama = await fetch(`${API_BASE_URL}/ConversarLlaMa`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: requestBody
-        });
-
-        if (!responseLlama.ok) {
-            throw new Error("Error en ConversarLlaMa");
-        }
-
-        const dataLlama = await responseLlama.json();
-        appendMessage(`${dataLlama.Resultados}`, "respuesta");
-
-        // Intentar guardar resumen
-        try {
-            const resumen = await fetch(`${API_BASE_URL}/ResumirConversacion?id=${currentConversation}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-            });
-
-            if (!resumen.ok) {
-                throw new Error("Error al guardar resumen");
-            }
-        } catch (error) {
-            showError("No se pudo guardar resumen. Contacte al administrador del sistema.", "error");
-            console.error(error);
-        }
-
-    } catch (error) {
-        showError("Hubo un error en la comunicación con el servidor. Contacte al administrador del sistema.", "error");
-        console.error(error);
-    } finally {
-        hideLoader();
-    }
-});
 
 
 });
