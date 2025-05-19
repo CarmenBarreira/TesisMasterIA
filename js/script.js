@@ -233,6 +233,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
+    function formatearRespuesta(texto) {
+        return texto
+          .split('\n')                           // separa por líneas reales
+          .map(linea => {
+            linea = linea.trim();               // limpia espacios
+            if (linea.startsWith('-')) {
+              return `<li>${linea.slice(1).trim()}</li>`; // convierte en item de lista
+            }
+            if (linea === '') {
+              return '<br>';                    // línea vacía → salto extra
+            }
+            return `<p>${linea}</p>`;           // párrafo normal
+          })
+          .join('\n');
+      }
+      
+
     function appendMessage(msg, side) {
 
         const messageElement = document.createElement("div");
@@ -240,16 +257,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         console.log("Mensaje a mostrar:", msg);
 
+
+        
+
+
         // Si el mensaje es un objeto, extraemos la pregunta y respuesta
         if (msg.pregunta && msg.respuesta) {
-            const respuestaConSaltos = msg.respuesta.replace(/\n/g, "<br>");
+
+            console.log("acaa")
+            const respuestaFormateada = formatearRespuesta(msg.respuesta);
+
             messageElement.innerHTML = `
-            <strong>Pregunta:</strong> ${msg.pregunta} <br>
-            <strong>Respuesta:</strong> ${respuestaConSaltos}
-        `;
+            <strong>Pregunta:</strong> ${msg.pregunta}<br><br>
+            <strong>Respuesta:</strong><br>${respuestaFormateada}
+            `;
 
         } else if (typeof msg === 'string') {
-            messageElement.textContent = msg;
+            const respuestaFormateada = formatearRespuesta(msg);
+
+            messageElement.innerHTML = respuestaFormateada;
         } else {
             messageElement.textContent = JSON.stringify(msg);
         }
@@ -310,6 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const dataMistral = await responseMistral.json();
+            console.log(dataMistral.Resultados)
             appendMessage(`${dataMistral.Resultados}`, "respuesta");
 
             // Resumen de la conversación
