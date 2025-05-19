@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage(`${dataMistral.Resultados}`, "respuesta");
 
             // Resumen de la conversación
-            try {
+           /* try {
                 const resumen = await fetch(`${API_BASE_URL}/ResumirConversacion?id=${currentConversation}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -325,7 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (error) {
                 showError("No se pudo guardar resumen. Contacte al administrador.", "error");
                 console.error(error);
-            }
+            }*/
 
         } catch (error) {
             showError("Hubo un error en la comunicación con el servidor. Contacte al administrador.", "error");
@@ -377,7 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
             appendMessage(`${dataLlama.Resultados}`, "respuesta");
 
             // Intentar guardar resumen
-            try {
+           /* try {
                 const resumen = await fetch(`${API_BASE_URL}/ResumirConversacion?id=${currentConversation}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -389,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (error) {
                 showError("No se pudo guardar resumen. Contacte al administrador del sistema.", "error");
                 console.error(error);
-            }
+            }*/
 
         } catch (error) {
             showError("Hubo un error en la comunicación con el servidor. Contacte al administrador del sistema.", "error");
