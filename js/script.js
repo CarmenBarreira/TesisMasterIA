@@ -83,6 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await response.json();
 
+            console.log(data)
+
             if (data.mensaje === "Conversación encontrada.") {
 
                 if (data.conversacion) {
@@ -99,15 +101,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     } else {
                         conversacion.forEach(item => {
+                            
                             // Crear el elemento para la pregunta
+
                             const preguntaElemento = document.createElement("div");
                             preguntaElemento.textContent = item.Pregunta;
                             preguntaElemento.classList.add("mensaje", "pregunta");
 
                             // Crear el elemento para la respuesta
-                            const respuestaElemento = document.createElement("div");
+                          /*  const respuestaElemento = document.createElement("div");
                             respuestaElemento.textContent = item.Resultados;
+                            respuestaElemento.classList.add("mensaje", "respuesta");*/
+
+                            // Crear el elemento para la respuesta
+                            const respuestaElemento = document.createElement("div");
+                            respuestaElemento.innerHTML = item.Resultados.replace(/\n/g, "<br>");
                             respuestaElemento.classList.add("mensaje", "respuesta");
+
 
                             chatContainer.appendChild(preguntaElemento);
                             chatContainer.appendChild(respuestaElemento);
